@@ -2,7 +2,7 @@
   <div class="backpackPanel">
     <div v-for="(v, k) in grid" :key="k">
       <div class="grid">
-        <div class="title" v-if="v.lv" @contextmenu.prevent="openMenu(k,$event)" @touchstart.stop.prevent="openMenu(k,$event)" @mouseover="showItemInfo($event,v.itemType,v)" @mouseleave="closeItemInfo">
+        <div class="title" :ref="'equipment_'+k" v-if="v.lv" @contextmenu.prevent="openMenu(k,$event)" @touchstart.stop.prevent="openMenu(k,$event)" @mouseover="showItemInfo($event,v.itemType,v)" @mouseleave="closeItemInfo">
           <div class="icon" :class="{'red-flash':v.enchantlvl>=13}"  :style="{ 'box-shadow': 'inset 0 0 7px 2px ' + v.quality.color }">
             <img :src="v.type.iconSrc" alt="" />
           </div>
@@ -148,7 +148,6 @@ export default {
     //     type: 'warning'
     //   });
     // }
-
   },
   methods: {
     // 点击span仍然可以设置input的值，操作的是数组，所以需要$set来实现双向绑定
@@ -189,7 +188,7 @@ export default {
       const offsetLeft = this.$el.getBoundingClientRect().left; // container margin left
       const offsetWidth = this.$el.offsetWidth; // container width
       const maxLeft = offsetWidth - menuMinWidth; // left boundary
-      if (e.type == 'touchstart') {
+      if (e.type == 'touchstart' && e.changedTouches &&  e.changedTouches[0]) {
         var left = e.changedTouches[0].clientX - offsetLeft + 15; // 15: margin right
       } else {
         var left = e.clientX - offsetLeft + 15; // 15: margin right
@@ -223,6 +222,7 @@ export default {
       this.currentItem.locked = v;
     },
     equipTheEquipment() {
+      console.log("equipTheEquipment", this.currentItem)
       switch (this.currentItem.itemType) {
         case 'weapon':
           this.grid[this.currentItemIndex] = this.$store.state.playerAttribute.weapon

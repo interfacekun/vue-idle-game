@@ -133,21 +133,21 @@ export default {
       return Str
     },
     async getSuggest() {
-      try {
-        let data = await this.$api.post(
-          "v1/Suggest/getReviewed", {
-          page: 1,
-          size: 30
-        }
-        );
-        if (data.data.error_code == 20000) {
-          this.update = data.data.content.rows
-        } else {
+      // try {
+      //   let data = await this.$api.post(
+      //     "v1/Suggest/getReviewed", {
+      //     page: 1,
+      //     size: 30
+      //   }
+      //   );
+      //   if (data.data.error_code == 20000) {
+      //     this.update = data.data.content.rows
+      //   } else {
 
-        }
-      } catch (error) {
-        console.log(error);
-      }
+      //   }
+      // } catch (error) {
+      //   console.log(error);
+      // }
       this.disabled = true
       setTimeout(() => {
         this.disabled = false

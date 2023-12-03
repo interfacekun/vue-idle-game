@@ -315,7 +315,12 @@ function createRandomEntry(lv, qualityCoefficient) {
   return entry
 }
 
+async function sleep(sleepTime) {
+  return new Promise(resolve => setTimeout(resolve, sleepTime))
+}
+
 export default {
+  sleep,
   deepCopy,
   CalculateStrAttr,
   createRandomEntry,

@@ -202,7 +202,7 @@
         </div>
       </div>
     </div>
-    <div class="map">
+    <!-- <div class="map">
       <div class="plan" v-show='inDungeons'>
         <dungeons></dungeons>
         <div class="eventEnd button" @click='eventEnd'>结束挑战</div>
@@ -248,7 +248,7 @@
         <span>lv{{v.lv}}</span>
       </div>
       <div class="event-icon endless" v-if="endlessLv&&playerLv>=10" @click="showEndlessDungeonsInfo()" v-show='!inDungeons' style="top: 6%;left: 16%;"><i class="icon-image"></i><span>无尽</span></div>
-    </div>
+    </div> -->
     <div class="menu">
 
       <cTooltip :placement="'top'">
@@ -362,7 +362,7 @@
         <span>背包</span>
         <i class="close" @click="closePanel"></i>
       </div>
-      <backpackPanel></backpackPanel>
+      <backpackPanel ref="backpackPanelRef" ></backpackPanel>
     </div>
     <div class="dialog-backpackPanel" v-show="shopPanelOpened">
       <div class="title">
@@ -446,6 +446,8 @@ import cTooltip from './uiComponent/tooltip'
 import { assist } from '../assets/js/assist';
 import { Base64 } from 'js-base64';
 import handle from '../assets/js/handle'
+import { setTimeout } from 'timers';
+
 export default {
   name: "index",
   mixins: [assist],
@@ -488,6 +490,7 @@ export default {
       saveData: {},
       saveDateString: '',
       debounceTime: {},  //防抖计时器
+      equipTheEquipmentIndex: -1,
     };
   },
   components: { weaponPanel, armorPanel, ringPanel, neckPanel, dungeons, backpackPanel, shopPanel, cTooltip, strengthenEquipment, extras, qa, setting, reinPanel },
@@ -540,6 +543,7 @@ export default {
     this.loadGame(sd)
     //生成随机副本
     this.createdDungeons()
+    setTimeout(this.testCmdOnLoad, 2000);
   },
   computed: {
     attribute() { return this.$store.state.playerAttribute.attribute },
@@ -574,9 +578,125 @@ export default {
     GMEquipQu() {
       this.GMEquipQu = this.GMEquipQu > 4 ? 4 : this.GMEquipQu
       this.GMEquipQu = this.GMEquipQu < 0 ? 0 : this.GMEquipQu
+    },
+    backpackPanelOpened(nv, ov) {
+      if (nv) {
+        // setTimeout(async ()=>{
+        //   const len = this.$refs.backpackPanelRef.itemNum;
+        //   console.log("itemNum", len)
+        //   for (let i = 0; i < len; i++) {
+        //     console.log("look equipment", i)
+        //     this.cmdLookEquipment(i);
+        //     await handle.sleep(2000);
+        //   }
+        // }, 100)
+      }
     }
   },
   methods: {
+    async testCmdOnLoad() {
+        // this.cmdLookEquipment(1);
+        // this.cmdOpenMenuEquipment(1);
+        // await handle.sleep(2000);
+        // this.cmdOpenStrengthenEquipmentPanel(1);
+        this.cmdEquipTheEquipment(1);
+        // this.cmdCloseBackpackPanel()
+    },
+
+    getBackpackPanelRef() {
+      return  this.$refs.backpackPanelRef
+    },
+
+    cmdCloseBackpackPanel(){
+      if (this.backpackPanelOpened) {
+         const ref = this.getBackpackPanelRef();
+         ref.closeItemInfo();
+         this.closePanel()
+      }
+    },
+
+    cmdCloseStrengthenEquipmentPanel(){
+      if (this.strengthenEquipmentPanelOpened) {
+         this.closePanel()
+      }
+    },
+
+    cmdOpenBackpackPanel(index){
+      if (!this.backpackPanelOpened) {
+        this.backpackPanelOpened = true
+      }
+      if (index != undefined) {
+       this.cmdLookEquipment(index)
+      }
+    },
+
+    async cmdLookEquipment(index) {
+      if (!this.backpackPanelOpened) {
+        this.backpackPanelOpened = true;
+      }
+       return new Promise(async resolve => {
+        await handle.sleep(100);
+          const ref = this.getBackpackPanelRef().$refs[`equipment_${index}`]
+          if (ref) {
+              const equipment = ref[0]
+              const rect = equipment.getBoundingClientRect()
+              // console.log('equipment', index, equipment, rect);
+              equipment.dispatchEvent(new MouseEvent('mouseover', { clientX: rect.left, clientY: rect.top }));
+              await handle.sleep(10);
+              resolve(true);
+              return
+          }
+          resolve(false);
+      });
+    },
+
+    async cmdOpenMenuEquipment(index) {
+      if (!this.backpackPanelOpened) {
+        this.backpackPanelOpened = true;
+      }
+      return new Promise(async resolve => {
+        await handle.sleep(100);
+        const ref = this.getBackpackPanelRef().$refs[`equipment_${index}`]
+        if (ref) {
+            const equipment = ref[0]
+            const rect = equipment.getBoundingClientRect()
+            // console.log('equipment', index, equipment, rect);
+            equipment.dispatchEvent(new MouseEvent('touchstart', { clientX: rect.left, clientY: rect.top }));
+            await handle.sleep(10);
+            resolve(true);
+            return
+        }
+        resolve(false);
+      });
+    },
+
+    async cmdOpenStrengthenEquipmentPanel(index) {
+       const ok = await this.cmdOpenMenuEquipment(index);
+       if (ok) {
+          const ref = this.getBackpackPanelRef();
+          ref.strengthenEquipment()         
+          await handle.sleep(10);
+          this.equipTheEquipmentIndex = index;
+          return true;
+       }
+       return false;
+    },
+
+    async cmdEquipTheEquipment(index) {
+      if (!this.strengthenEquipmentPanelOpened) {
+         let ok = await this.cmdOpenStrengthenEquipmentPanel(index)
+         if (!ok) return;
+      }
+      console.log("equipTheEquipmentIndex", this.equipTheEquipmentIndex)
+      if (this.equipTheEquipmentIndex == index) {
+        const ref = this.getBackpackPanelRef();
+        ref.equipTheEquipment()
+        await handle.sleep(10);
+        return true;
+      }
+      return false;
+    },
+
     navToGithub() {
       window.open('https://github.com/Couy69/vue-idle-game', '_blank');
     },
@@ -993,6 +1113,7 @@ export default {
 
     },
     closePanel() {
+      this.equipTheEquipmentIndex = -1;
       this.backpackPanelOpened = this.shopPanelOpened = this.importSaveDataPanelOpened = this.exportSaveDataPanelOpened = this.strengthenEquipmentPanelOpened = this.reinPanelOpened = false
       this.GMOpened = false
       this.saveDateString = ''
@@ -1103,7 +1224,7 @@ a {
   .user-status {
     position: absolute;
     top: 0.1rem;
-    left: 0.1rem;
+    left: calc(50% - 4rem);
     border: 2px solid #ccc;
     height: 4rem;
     width: 4rem;
@@ -1187,11 +1308,11 @@ a {
         width: 100%;
       }
     }
-  }
+  } 
   .user-item {
     position: absolute;
     top: 0.1rem;
-    left: 4.2rem;
+    left: calc(50% + 4.1rem - 4rem);
     border: 2px solid #ccc;
     height: 4rem;
     width: 4rem;
@@ -1259,8 +1380,7 @@ a {
     height: calc(100% - 4.4rem);
     width: 8.1rem;
     bottom: 0.1rem;
-    left: 0.1rem;
-
+    left: calc(50% - 4rem);
     transition: 0.2s;
     padding: 0.2rem;
     .clear {

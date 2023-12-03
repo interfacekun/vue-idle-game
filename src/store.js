@@ -126,11 +126,18 @@ export default new Vuex.Store({
     needStrengthenEquipment: {}, //设定当前需要强化的装备
     sysInfo: [{
       type: '',
-      msg: "欢迎你勇士，点击地图上的副本开始战斗。"
-    }, {
+      // msg: "欢迎你勇士，点击地图上的副本开始战斗。"
+      msg: "欢迎你勇士，你需要变强。"
+    }, 
+    // {
+    //   type: '',
+    //   msg: "菜单栏可以刷新当前世界副本。"
+    // }
+    {
       type: '',
-      msg: "菜单栏可以刷新当前世界副本。"
-    }],
+      msg: "请根据提示输入弹幕"
+    }
+    ],
     reincarnationAttribute: {
       'HP': 0,
       'ATK': 0,
