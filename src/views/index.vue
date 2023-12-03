@@ -383,7 +383,7 @@
         <span>强化装备</span>
         <i class="close" @click="closePanel"></i>
       </div>
-      <strengthenEquipment></strengthenEquipment>
+      <strengthenEquipment ref="strengthenEquipmentPanelRef"></strengthenEquipment>
     </div>
     <div class="dialog-backpackPanel" v-show="exportSaveDataPanelOpened">
       <div class="title">
@@ -600,11 +600,17 @@ export default {
         // await handle.sleep(2000);
         // this.cmdOpenStrengthenEquipmentPanel(1);
         this.cmdEquipTheEquipment(1);
+        await handle.sleep(2000);
+        this.cmdEquipTheEquipment(1);
         // this.cmdCloseBackpackPanel()
     },
 
     getBackpackPanelRef() {
       return  this.$refs.backpackPanelRef
+    },
+
+    getStrengthenEquipmentPanelRef() {
+      return this.$refs.strengthenEquipmentPanelRef
     },
 
     cmdCloseBackpackPanel(){
@@ -689,8 +695,9 @@ export default {
       }
       console.log("equipTheEquipmentIndex", this.equipTheEquipmentIndex)
       if (this.equipTheEquipmentIndex == index) {
-        const ref = this.getBackpackPanelRef();
-        ref.equipTheEquipment()
+        await handle.sleep(1000);
+        const ref = this.getStrengthenEquipmentPanelRef();
+        ref.startStreng()
         await handle.sleep(10);
         return true;
       }

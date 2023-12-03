@@ -213,6 +213,7 @@ export default {
 
       this.changeTheEquimentByLv(lv)
       this.changeTheEquiment()
+      console.log("强化成功", lv)
     },
     startAutoStreng() {
       this.autoStrengModel = true
