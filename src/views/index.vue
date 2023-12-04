@@ -447,13 +447,17 @@ import { assist } from '../assets/js/assist';
 import { Base64 } from 'js-base64';
 import handle from '../assets/js/handle'
 import { setTimeout } from 'timers';
+import mqtt from 'mqtt';
+
+var oldCient;
+var oldCientId;
 
 export default {
   name: "index",
   mixins: [assist],
   data() {
     return {
-      GMmodel: false,
+      GMmodel: true,
       time: '00:00:00',
       sysInfo: {},
       weaponShow: false,
@@ -491,6 +495,8 @@ export default {
       saveDateString: '',
       debounceTime: {},  //防抖计时器
       equipTheEquipmentIndex: -1,
+      mqttClient: null,
+      mqttClientId: null,
     };
   },
   components: { weaponPanel, armorPanel, ringPanel, neckPanel, dungeons, backpackPanel, shopPanel, cTooltip, strengthenEquipment, extras, qa, setting, reinPanel },
@@ -513,6 +519,10 @@ export default {
       this.windowVisibilitychange()
     });
 
+  },
+  unmounted() {
+    console.log("unmounted");
+    this.mqttEnd();
   },
   mounted() {
     // 自动回血
@@ -591,18 +601,87 @@ export default {
         //   }
         // }, 100)
       }
-    }
+    },
+
+    mqttClient(nv, old) {
+        console.log("mqttClient", nv, old)
+   
+        if (window.oldCient) {
+          this.mqttEnd(window.oldCient);
+        }
+        
+        window.oldCient = nv
+    },
+    mqttClientId(nv) {
+       window.oldCientId = nv
+    },
   },
   methods: {
+
     async testCmdOnLoad() {
         // this.cmdLookEquipment(1);
         // this.cmdOpenMenuEquipment(1);
         // await handle.sleep(2000);
         // this.cmdOpenStrengthenEquipmentPanel(1);
-        this.cmdEquipTheEquipment(1);
+        // this.cmdEquipTheEquipment(1);
         await handle.sleep(2000);
-        this.cmdEquipTheEquipment(1);
+        this.mqtt();
+        // this.cmdEquipTheEquipment(1);
         // this.cmdCloseBackpackPanel()
+    },
+
+    async mqttEnd(client) {
+       if (!client) {
+         client = this.mqttClient
+       }
+       if (client) {
+          let id = window.oldCientId
+          client.end(false, () => {
+            console.log(id, 'Successfully disconnected!')
+        });
+      }
+    },
+
+    async mqtt() {
+      if (this.mqttClient) {
+        this.mqttClient.end();
+      }
+
+      const connection = {
+        protocol: "ws",
+        host: "192.168.31.24",
+        // ws: 8083; wss: 8084
+        port: 8083,
+        endpoint: "/mqtt",
+        // for more options, please refer to https://github.com/mqttjs/MQTT.js#mqttclientstreambuilder-options
+        clean: true,
+        connectTimeout: 30 * 1000, // ms
+        reconnectPeriod: 4000, // ms
+        clientId: "emqx_vue_" + Math.random().toString(16).substring(2, 8),
+        // auth
+        username: "admin",
+        password: "public",
+      };
+      const { protocol, host, port, endpoint, ...options } = connection;
+      const url = `${protocol}://${host}:${port}${endpoint}`;
+      const client = mqtt.connect(url, options);
+      console.log(connection.clientId, "mqtt start connect", url);
+      client.on("connect", () => {
+        console.log(connection.clientId, "mqtt connected!");
+        client.subscribe("ikun", (err) => {
+          if (!err) {
+             client.on("message", (topic, message) => {
+              // message is Buffer
+              console.log(`[${connection.clientId}]recive`, topic, message.toString());
+              // client.end();
+            });
+            client.publish("ikun", "Hello mqtt123456");
+          }
+        });
+      });
+      this.mqttClient = client;
+      this.mqttClientId = connection.clientId;
+      
     },
 
     getBackpackPanelRef() {
